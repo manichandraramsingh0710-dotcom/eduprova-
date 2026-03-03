@@ -1,0 +1,42 @@
+name: EduProva Direct EC2 Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            script: |
+              cd ~/eduprova-
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Creating backend .env"
+            echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+
+            echo "Creating frontend .env"
+            echo "${{ secrets.FRONTEND_ENV }}" > eduprova-workupdates/.env
+
+            echo "Stopping old containers"
+            docker compose down
+
+            echo "Rebuilding and starting containers"
+            docker compose up -d --build
+
+            echo "Cleaning unused images"
+            docker image prune -f
