@@ -1,8 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.routers import auth, tasks, employees
 
-app = FastAPI(title="Eduprova API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Log and seed DB on startup
+    print("Starting up and seeding database...")
+    await auth.seed_db()
+    yield
+    print("Shutting down...")
+
+app = FastAPI(title="Eduprova API", lifespan=lifespan)
 
 origins = [
     "http://localhost:5173",

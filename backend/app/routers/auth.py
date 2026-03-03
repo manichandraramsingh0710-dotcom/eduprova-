@@ -67,6 +67,3 @@ async def seed_db():
         except DuplicateKeyError:
             pass
 
-@router.on_event("startup")
-async def startup_event():
-    await seed_db()
