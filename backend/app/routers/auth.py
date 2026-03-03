@@ -38,19 +38,23 @@ async def login(req: LoginRequest):
         }
     }
 
-def seed_db():
-    import asyncio
-    async def run_seed():
-        admin = await db.users.find_one({"_id": "admin"})
-        if not admin:
-            await db.users.insert_many([
+from pymongo.errors import DuplicateKeyError
+
+async def seed_db():
+    admin = await db.users.find_one({"_id": "admin"})
+    if not admin:
+        try:
+            await db.users.insert_one(
                 {"_id": "admin", "username": "admin", "password": get_password_hash("admin"), "role": "admin", "name": "Ruksana"}
-            ])
+            )
             print("Database seeded with initial users.")
-            
-        employee = await db.users.find_one({"_id": "E001"})
-        if not employee:
-            from datetime import datetime
+        except DuplicateKeyError:
+            pass
+        
+    employee = await db.users.find_one({"_id": "E001"})
+    if not employee:
+        from datetime import datetime
+        try:
             await db.users.insert_one({
                 "_id": "E001",
                 "username": "E001",
@@ -60,8 +64,9 @@ def seed_db():
                 "createdAt": datetime.utcnow()
             })
             print("Database seeded with initial employee E001.")
-    asyncio.create_task(run_seed())
+        except DuplicateKeyError:
+            pass
 
 @router.on_event("startup")
 async def startup_event():
-    seed_db()
+    await seed_db()
