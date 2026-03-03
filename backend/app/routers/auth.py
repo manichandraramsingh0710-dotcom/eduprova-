@@ -41,29 +41,41 @@ async def login(req: LoginRequest):
 from pymongo.errors import DuplicateKeyError
 
 async def seed_db():
-    admin = await db.users.find_one({"_id": "admin"})
-    if not admin:
+    import asyncio
+    max_retries = 5
+    for attempt in range(max_retries):
         try:
-            await db.users.insert_one(
-                {"_id": "admin", "username": "admin", "password": get_password_hash("admin"), "role": "admin", "name": "Ruksana"}
-            )
-            print("Database seeded with initial users.")
-        except DuplicateKeyError:
-            pass
-        
-    employee = await db.users.find_one({"_id": "E001"})
-    if not employee:
-        from datetime import datetime
-        try:
-            await db.users.insert_one({
-                "_id": "E001",
-                "username": "E001",
-                "password": get_password_hash("pass"),
-                "role": "employee",
-                "name": "Jane Doe",
-                "createdAt": datetime.utcnow()
-            })
-            print("Database seeded with initial employee E001.")
-        except DuplicateKeyError:
-            pass
+            admin = await db.users.find_one({"_id": "admin"})
+            if not admin:
+                try:
+                    await db.users.insert_one(
+                        {"_id": "admin", "username": "admin", "password": get_password_hash("admin"), "role": "admin", "name": "Ruksana"}
+                    )
+                    print("Database seeded with initial users.")
+                except DuplicateKeyError:
+                    pass
+                
+            employee = await db.users.find_one({"_id": "E001"})
+            if not employee:
+                from datetime import datetime
+                try:
+                    await db.users.insert_one({
+                        "_id": "E001",
+                        "username": "E001",
+                        "password": get_password_hash("pass"),
+                        "role": "employee",
+                        "name": "Jane Doe",
+                        "createdAt": datetime.utcnow()
+                    })
+                    print("Database seeded with initial employee E001.")
+                except DuplicateKeyError:
+                    pass
+            print("Database setup complete.")
+            break
+        except Exception as e:
+            print(f"Database connection attempt {attempt+1}/{max_retries} failed: {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(5)
+            else:
+                print("Could not connect to database for seeding. Moving on.")
 
