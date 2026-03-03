@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             script: |
-            cd ~/eduprova-
+              cd ~/eduprova-
 
             echo "Pulling latest code..."
             git pull origin main
